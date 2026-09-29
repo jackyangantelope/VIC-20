@@ -1,0 +1,8 @@
+# Third-party source and provenance
+
+- [davervw/c-simple-emu6502-cbm](https://github.com/davervw/c-simple-emu6502-cbm), commit `2c7967752340a2cf3265ad0772e349b60a818f6b`: unmodified `emu6502.cpp` and `emu6502.h` in `deps/c-simple-emu6502-cbm/`. The upstream MIT license is retained there. Other upstream emulator files and the upstream ROM directory are not copied.
+- [PicoPlus-devel/pico_shared](https://github.com/PicoPlus-devel/pico_shared), commit `df683bf00ff95e1ceda88f132bbf72f8cc7cadb0`: minimal public subset in `deps/pico_shared/`, with its GPLv3 `LICENSE`. The included pico_fatfs driver retains its separate BSD-style license and FatFs notices.
+- [jackyangantelope/PokemonMini](https://github.com/jackyangantelope/PokemonMini), commit `1212d0d39ed5714ae3816a4046d40e72543f5a83`: `platform/wave1/`, `cmake/LoaderPartition.cmake`, `scripts/build-release.ps1`, and `scripts/validate-uf2-layout.py` are adapted from this public BSD-3-Clause port. The HDMI adapter's diagnostic names, loader function, build target, and runtime configuration were changed for VIC-20. The parent port adapted the Fruit Jam runtime from [jackyangantelope/gamate-public-release](https://github.com/jackyangantelope/gamate-public-release) commit `4e61e6e4cb304e2fa342862af4d47413782d72f7`.
+- Pico SDK and Pico-PIO-USB are external build dependencies, not bundled here. Follow their upstream licenses when building or redistributing.
+
+`app/playable_platform.cpp` and `scripts/make_test_prg.py` came from the VIC-20 development port. The generator creates a PRG under the ignored `build/` directory; its binary output is not distributed.

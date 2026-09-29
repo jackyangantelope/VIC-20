@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 3.20)
+
+set(PICO_BOARD adafruit_fruit_jam CACHE STRING "Adafruit Fruit Jam" FORCE)
+set(PICO_PSRAM_CS_PIN 47 CACHE STRING "Fruit Jam PSRAM chip select" FORCE)
+set(PICO_PSRAM_SIZE_BYTES 0x800000 CACHE STRING "Fruit Jam PSRAM size" FORCE)
+set(PICO_DEFAULT_UART 0 CACHE STRING "Diagnostic UART" FORCE)
+set(PICO_DEFAULT_UART_TX_PIN 44 CACHE STRING "Diagnostic UART TX" FORCE)
+set(PICO_DEFAULT_UART_RX_PIN 45 CACHE STRING "Diagnostic UART RX" FORCE)
+
+if(NOT DEFINED PICO_SDK_PATH)
+    message(FATAL_ERROR "Set PICO_SDK_PATH to Pico SDK 2.3.0 or newer")
+endif()
+set(PICO_SHARED_PATH "${CMAKE_CURRENT_LIST_DIR}/deps/pico_shared" CACHE PATH "pico_shared checkout")
+if(NOT DEFINED PICO_PIO_USB_PATH)
+    message(FATAL_ERROR "Set PICO_PIO_USB_PATH to Pico-PIO-USB checkout")
+endif()
+
+include("${PICO_SDK_PATH}/external/pico_sdk_import.cmake")
+project(picoVic20 C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+pico_sdk_init()
+
+add_library(vic20_cpu STATIC "${CMAKE_CURRENT_LIST_DIR}/deps/c-simple-emu6502-cbm/emu6502.cpp")
+target_include_directories(vic20_cpu PUBLIC "${CMAKE_CURRENT_LIST_DIR}/deps/c-simple-emu6502-cbm")
+target_compile_options(vic20_cpu PRIVATE -ffunction-sections -fdata-sections)
+
+set(JACK_WAVE1_HDMI_AUDIO ON)
+set(JACK_WAVE1_HDMI_DRIVER_ROOT "${PICO_SHARED_PATH}/drivers/pico_hdmi")
+set(JACK_WAVE1_HDMI_ADAPTER "${CMAKE_CURRENT_LIST_DIR}/platform/wave1/hdmi/vic20_hdmi.c")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/platform/wave1" "${CMAKE_BINARY_DIR}/wave1")
+
+option(BUILD_FOR_BOOTLOADER "Link to the resident loader app partition" ON)
+add_executable(picoVic20 "${CMAKE_CURRENT_LIST_DIR}/app/playable_platform.cpp")
+pico_set_program_name(picoVic20 "picoVic20")
+pico_set_program_version(picoVic20 "0.2.0-fruit-jam-candidate")
+pico_enable_stdio_uart(picoVic20 1)
+pico_enable_stdio_usb(picoVic20 0)
+target_compile_definitions(picoVic20 PRIVATE
+    HW_CONFIG=8 PICO_STACK_SIZE=4096 PICO_CORE1_STACK_SIZE=4096
+    PICO_PSRAM_CS_PIN=47 PICO_PSRAM_SIZE_BYTES=0x800000
+    JACK_WAVE1_PERF_INTERVAL_US=1000000u)
+target_compile_options(picoVic20 PRIVATE -Wall -Wextra -Wno-unused-parameter)
+target_link_libraries(picoVic20 PRIVATE pico_stdlib hardware_psram vic20_cpu jack_wave1_runtime)
+target_link_options(picoVic20 PRIVATE -Wl,--gc-sections -Wl,--print-memory-usage)
+if(BUILD_FOR_BOOTLOADER)
+    include("${CMAKE_CURRENT_LIST_DIR}/cmake/LoaderPartition.cmake")
+    vic20_link_for_loader(picoVic20)
+endif()
+pico_add_extra_outputs(picoVic20)

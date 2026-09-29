@@ -1,0 +1,15 @@
+/build/
+/tools/release/
+/.claude/
+/.codex/
+*.uf2
+*.elf
+*.map
+*.bin
+*.rom
+*.prg
+*.d64
+*.tap
+*.crt
+*.sav
+*.eep
